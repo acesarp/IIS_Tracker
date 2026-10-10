@@ -28,7 +28,7 @@ const KM_PER_DEGREE = 111.32;
 // Degrees the globe turns per pixel dragged.
 const DRAG_SENSITIVITY = 0.4;
 // The ISS marker is a round photo; public/ files need the base path, unlike <Link>s.
-const AVATAR_RADIUS = 26;
+const AVATAR_RADIUS = 28;
 
 const topology = countriesJson as unknown as Topology<{ countries: GeometryCollection }>;
 const countries = feature(topology, topology.objects.countries);
