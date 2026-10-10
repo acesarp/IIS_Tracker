@@ -5,3 +5,5 @@
 *.vsidx
 /.vs/slnx.sqlite
 /svg-world-maps-main/svg-world-maps-main
+*.wsuo
+*.sqlite-journal
