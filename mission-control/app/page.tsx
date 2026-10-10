@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 type Apod = {
   title: string;
@@ -17,7 +18,15 @@ async function getApod(): Promise<Apod> {
   return res.json();
 }
 
-export default async function Home() {
+export default function Home() {
+  return (
+    <Suspense fallback={<main className="mx-auto max-w-3xl p-6">Loading picture of the day...</main>}>
+      <ApodContent />
+    </Suspense>
+  );
+}
+
+async function ApodContent() {
   const apod = await getApod();
   return (
     <main className="mx-auto max-w-3xl p-6">
