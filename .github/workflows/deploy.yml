@@ -1,0 +1,78 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint and type-check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: my-app/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      # Generates the route types (LayoutProps, PageProps...) that tsc needs without a full build.
+      - run: npx next typegen
+      - run: npx tsc --noEmit
+
+  deploy:
+    name: Deploy to VM
+    needs: check
+    # The only job on the self-hosted runner (the home server). Keep it gated to direct pushes to
+    # main -- github.ref for a pull_request event is refs/pull/N/merge, never refs/heads/main, so
+    # a PR (including one from a fork) can never reach the runner. Don't add a self-hosted job
+    # that responds to pull_request.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, my-app]
+    # Never run two deploys at once; a newer push waits for the current one to finish.
+    concurrency:
+      group: deploy-my-app
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: my-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and restart
+        # The image is built on the VM itself, so no registry or registry login is involved. The key
+        # reaches the build as a BuildKit secret and the container as an environment variable.
+        env:
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
+        run: |
+          if [ -z "$NASA_API_KEY" ]; then
+            echo "::error::The NASA_API_KEY repository secret must be set"
+            exit 1
+          fi
+          docker compose build
+          docker compose up -d
+          docker image prune -f
+
+      - name: Smoke test
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3000/iss; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The app did not respond on port 3000"
+          docker compose logs --tail 50
+          exit 1

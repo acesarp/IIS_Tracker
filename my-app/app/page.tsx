@@ -19,7 +19,6 @@ async function getApod(): Promise<Apod> {
 
 export default async function Home() {
   const apod = await getApod();
-console.log("ley --> " + process.env.NASA_API_KEY);
   return (
     <main className="mx-auto max-w-3xl p-6">
       <h1 className="text-3xl font-bold">{apod.title}</h1>
