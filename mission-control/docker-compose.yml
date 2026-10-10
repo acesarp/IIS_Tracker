@@ -4,16 +4,7 @@ services:
   mission-control:
     build:
       context: .
-      secrets:
-        - nasa_api_key
     image: mission-control:latest
     ports:
       - "${APP_PORT:-3000}:3000"
-    environment:
-      # Needed at runtime too: the picture of the day is re-fetched when its cache expires.
-      - NASA_API_KEY=${NASA_API_KEY}
     restart: unless-stopped
-
-secrets:
-  nasa_api_key:
-    environment: NASA_API_KEY

@@ -51,15 +51,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build and restart
-        # The image is built on the VM itself, so no registry or registry login is involved. The key
-        # reaches the build as a BuildKit secret and the container as an environment variable.
-        env:
-          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
+        # The image is built on the VM itself, so no registry or registry login is involved.
         run: |
-          if [ -z "$NASA_API_KEY" ]; then
-            echo "::error::The NASA_API_KEY repository secret must be set"
-            exit 1
-          fi
           docker compose build
           docker compose up -d
           docker image prune -f
@@ -67,7 +60,7 @@ jobs:
       - name: Smoke test
         run: |
           for attempt in $(seq 1 30); do
-            if curl -fsS -o /dev/null http://localhost:3000/mission-control/iss; then
+            if curl -fsS -o /dev/null http://localhost:3000/mission-control; then
               echo "App is up"
               exit 0
             fi
