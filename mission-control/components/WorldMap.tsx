@@ -21,14 +21,14 @@ import type { IssPosition } from "@/lib/iss";
 
 export type MapView = "map" | "globe";
 
-const MAP_WIDTH = 960;
-const MAP_HEIGHT = 480;
-const GLOBE_SIZE = 480;
+const MAP_WIDTH = 1060;
+const MAP_HEIGHT = 780;
+const GLOBE_SIZE = 780;
 const KM_PER_DEGREE = 111.32;
 // Degrees the globe turns per pixel dragged.
 const DRAG_SENSITIVITY = 0.4;
 // The ISS marker is a round photo; public/ files need the base path, unlike <Link>s.
-const AVATAR_RADIUS = 18;
+const AVATAR_RADIUS = 26;
 
 const topology = countriesJson as unknown as Topology<{ countries: GeometryCollection }>;
 const countries = feature(topology, topology.objects.countries);
@@ -113,21 +113,21 @@ function Layers({ projection, path, staticPaths, center, oceanFill, position, pa
       {pastPath && <path d={pastPath} className="fill-none stroke-amber-300" strokeWidth={2} strokeLinecap="round" />}
       {marker && (
         <g transform={`translate(${marker[0]} ${marker[1]})`}>
-          <circle r={AVATAR_RADIUS} className="animate-ping fill-amber-300/40 [transform-box:fill-box] origin-center" />
+          <circle r={AVATAR_RADIUS * 1.3 } className="animate-ping fill-amber-300/40 [transform-box:fill-box] origin-center" />
           {/* Only one marker is ever on screen, so a fixed clip-path id can't collide. */}
           <clipPath id="iss-avatar-clip">
-            <circle r={AVATAR_RADIUS} />
+            <circle r={AVATAR_RADIUS * 1.3 } />
           </clipPath>
           <image
             href={`${BASE_PATH}/iss-avatar.png`}
-            x={-AVATAR_RADIUS}
-            y={-AVATAR_RADIUS}
-            width={AVATAR_RADIUS * 2}
-            height={AVATAR_RADIUS * 2}
+            x={-AVATAR_RADIUS }
+            y={-AVATAR_RADIUS + 1 }
+            width={AVATAR_RADIUS * 2 }
+            height={AVATAR_RADIUS * 2 }
             clipPath="url(#iss-avatar-clip)"
             preserveAspectRatio="xMidYMid slice"
           />
-          <circle r={AVATAR_RADIUS} className="fill-none stroke-amber-300" strokeWidth={2.5} />
+          <circle r={AVATAR_RADIUS * 1.1} className="fill-none stroke-amber-300" strokeWidth={1} />
         </g>
       )}
     </>
