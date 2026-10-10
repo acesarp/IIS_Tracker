@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { BASE_PATH } from "@/lib/base-path";
 import type { IssPosition, IssTrack } from "@/lib/iss";
 
 import WorldMap, { type MapView } from "./WorldMap";
@@ -29,7 +30,7 @@ export default function IssTracker() {
     // never stack up overlapping requests.
     async function poll() {
       try {
-        const res = await fetch("/api/iss", { cache: "no-store" });
+        const res = await fetch(`${BASE_PATH}/api/iss`, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(`Request failed with status ${res.status}`);
         }
@@ -58,7 +59,7 @@ export default function IssTracker() {
 
     async function loadTrack() {
       try {
-        const res = await fetch("/api/iss/track", { cache: "no-store" });
+        const res = await fetch(`${BASE_PATH}/api/iss/track`, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(`Request failed with status ${res.status}`);
         }

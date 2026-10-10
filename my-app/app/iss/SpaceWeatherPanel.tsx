@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { BASE_PATH } from "@/lib/base-path";
 import { flareClass, type NoaaScale, type SpaceWeather } from "@/lib/space-weather";
 
 import Sparkline from "./Sparkline";
@@ -60,7 +61,7 @@ export default function SpaceWeatherPanel() {
 
     async function poll() {
       try {
-        const res = await fetch("/api/space-weather", { cache: "no-store" });
+        const res = await fetch(`${BASE_PATH}/api/space-weather`, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(`Request failed with status ${res.status}`);
         }

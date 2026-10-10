@@ -67,7 +67,7 @@ jobs:
       - name: Smoke test
         run: |
           for attempt in $(seq 1 30); do
-            if curl -fsS -o /dev/null http://localhost:3000/iss; then
+            if curl -fsS -o /dev/null http://localhost:3000/mission-control/iss; then
               echo "App is up"
               exit 0
             fi
