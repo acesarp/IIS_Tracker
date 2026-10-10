@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { IssPosition, IssTrack } from "@/lib/iss";
 
-import WorldMap from "./WorldMap";
+import WorldMap, { type MapView } from "./WorldMap";
 
 const POLL_INTERVAL_MS = 3000;
 // The server recomputes the predicted track every 30 seconds.
@@ -17,6 +17,8 @@ function formatCoordinate(value: number, positive: string, negative: string) {
 export default function IssTracker() {
   const [position, setPosition] = useState<IssPosition | null>(null);
   const [track, setTrack] = useState<IssTrack | null>(null);
+  const [trackUnavailable, setTrackUnavailable] = useState(false);
+  const [view, setView] = useState<MapView>("globe");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,11 +59,16 @@ export default function IssTracker() {
     async function loadTrack() {
       try {
         const res = await fetch("/api/iss/track", { cache: "no-store" });
-        if (!res.ok) return;
+        if (!res.ok) {
+          throw new Error(`Request failed with status ${res.status}`);
+        }
         const next: IssTrack = await res.json();
-        if (!cancelled) setTrack(next);
+        if (cancelled) return;
+        setTrack(next);
+        setTrackUnavailable(false);
       } catch {
         // Keep showing the previous track, if any.
+        if (!cancelled) setTrackUnavailable(true);
       }
     }
 
@@ -86,8 +93,26 @@ export default function IssTracker() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-lg">
-        <WorldMap position={position} pastTrack={track?.past ?? []} futureTrack={track?.future ?? []} />
+      <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-lg">
+        <div className="absolute left-3 top-3 z-10 flex rounded-lg bg-slate-800/90 p-1 text-sm">
+          {(["globe", "map"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setView(option)}
+              aria-pressed={view === option}
+              className={`rounded-md px-3 py-1 capitalize ${view === option ? "bg-slate-600 text-white" : "text-slate-300 hover:text-white"}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <WorldMap view={view} position={position} pastTrack={track?.past ?? []} futureTrack={track?.future ?? []} />
+        {trackUnavailable && !track && (
+          <p className="absolute bottom-3 left-3 rounded-lg bg-slate-800/90 px-3 py-1.5 text-xs text-slate-400">
+            Orbit prediction unavailable right now
+          </p>
+        )}
       </div>
 
       {error && (

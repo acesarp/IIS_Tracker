@@ -4,7 +4,8 @@ import { cacheLife } from "next/cache";
 import { degreesLat, degreesLong, eciToGeodetic, gstime, propagate, twoline2satrec } from "satellite.js";
 
 // NORAD catalog id 25544 is the ISS.
-const TLE_URL = "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE";
+const CELESTRAK_TLE_URL = "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE";
+const WHERETHEISS_TLE_URL = "https://api.wheretheiss.at/v1/satellites/25544/tles?format=json";
 
 // A two-line element set: the standard format for a satellite's orbit at a given moment.
 type Tle = {
@@ -14,25 +15,50 @@ type Tle = {
 
 type Satrec = ReturnType<typeof twoline2satrec>;
 
-// CelesTrak publishes new elements a few times a day and asks clients not to poll more often
-// than that, so the TLE is cached for hours and shared by every visitor.
-async function getIssTle(): Promise<Tle> {
-  "use cache";
-  cacheLife("hours");
+function checkTle(tle: Partial<Tle>, source: string): Tle {
+  if (!tle.line1?.startsWith("1 ") || !tle.line2?.startsWith("2 ")) {
+    throw new Error(`${source} returned an unexpected TLE format`);
+  }
+  return { line1: tle.line1, line2: tle.line2 };
+}
 
-  const res = await fetch(TLE_URL);
+async function fetchCelestrakTle(): Promise<Tle> {
+  const res = await fetch(CELESTRAK_TLE_URL);
   if (!res.ok) {
     throw new Error(`CelesTrak returned ${res.status}`);
   }
-
   const [, line1, line2] = (await res.text())
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  if (!line1?.startsWith("1 ") || !line2?.startsWith("2 ")) {
-    throw new Error("CelesTrak returned an unexpected TLE format");
+  return checkTle({ line1, line2 }, "CelesTrak");
+}
+
+// Usually a few hours older than CelesTrak's, which still predicts within a few km.
+async function fetchWheretheissTle(): Promise<Tle> {
+  const res = await fetch(WHERETHEISS_TLE_URL);
+  if (!res.ok) {
+    throw new Error(`wheretheiss.at returned ${res.status}`);
   }
-  return { line1, line2 };
+  return checkTle(await res.json(), "wheretheiss.at");
+}
+
+// CelesTrak publishes new elements a few times a day and temporarily blocks (403) clients that
+// download the same data too often, so the TLE is cached for hours and shared by every visitor,
+// with wheretheiss.at as a fallback source. Failures aren't cached, so the next request retries.
+async function getIssTle(): Promise<Tle> {
+  "use cache";
+  cacheLife("hours");
+
+  try {
+    return await fetchCelestrakTle();
+  } catch (celestrakError) {
+    try {
+      return await fetchWheretheissTle();
+    } catch (fallbackError) {
+      throw new Error(`No TLE source available: ${celestrakError}; ${fallbackError}`);
+    }
+  }
 }
 
 // Predicts the point on Earth directly below the satellite every `stepMs` between two times,
