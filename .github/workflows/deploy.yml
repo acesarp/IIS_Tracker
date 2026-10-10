@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: my-app
+        working-directory: mission-control
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: my-app/package-lock.json
+          cache-dependency-path: mission-control/package-lock.json
 
       - run: npm ci
       - run: npm run lint
@@ -39,14 +39,14 @@ jobs:
     # a PR (including one from a fork) can never reach the runner. Don't add a self-hosted job
     # that responds to pull_request.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, my-app]
+    runs-on: [self-hosted, mission-control]
     # Never run two deploys at once; a newer push waits for the current one to finish.
     concurrency:
-      group: deploy-my-app
+      group: deploy-mission-control
       cancel-in-progress: false
     defaults:
       run:
-        working-directory: my-app
+        working-directory: mission-control
     steps:
       - uses: actions/checkout@v4
 

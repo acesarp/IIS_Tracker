@@ -1,12 +1,12 @@
-name: my-app
+name: mission-control
 
 services:
-  my-app:
+  mission-control:
     build:
       context: .
       secrets:
         - nasa_api_key
-    image: my-app:latest
+    image: mission-control:latest
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
