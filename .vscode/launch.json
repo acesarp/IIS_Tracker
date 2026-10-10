@@ -12,7 +12,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\my-app\\app\\page.tsx",
+            "program": "${workspaceFolder}\\mission-control\\app\\page.tsx",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

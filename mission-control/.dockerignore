@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+# Secrets reach the image only through the build secret and runtime environment.
+.env*
+npm-debug.log*
+*.tsbuildinfo
+Dockerfile
+docker-compose.yml
+.dockerignore
