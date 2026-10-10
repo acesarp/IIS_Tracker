@@ -10,9 +10,7 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# The home page (NASA's picture of the day) is prerendered during the build and needs the API
-# key. It's mounted as a BuildKit secret, so it never lands in an image layer or the history.
-RUN --mount=type=secret,id=nasa_api_key,env=NASA_API_KEY npm run build
+RUN npm run build
 
 FROM node:24-alpine AS runtime
 WORKDIR /app

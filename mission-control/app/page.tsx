@@ -1,32 +1,28 @@
-import Image from "next/image";
-type Apod = {
-  title: string;
-  date: string;
-  explanation: string;
-  url: string;
-  media_type: "image" | "video";
+import type { Metadata } from "next";
+
+import IssTracker from "@/components/IssTracker";
+import SpaceWeatherPanel from "@/components/SpaceWeatherPanel";
+
+export const metadata: Metadata = {
+  title: "ISS Live Tracker",
+  description: "Live position of the International Space Station, updated every few seconds.",
 };
 
-async function getApod(): Promise<Apod> {
-  const res = await fetch(
-    `https://api.nasa.gov/planetary/apod?api_key=${process.env.NASA_API_KEY}`,
-    { next: { revalidate: 3600 } } // cache de 1 hora: economiza chamadas da sua cota
-  );
-  if (!(res.status !== 200)) console.log(`NASA API: ${res.status}`);
-  console.log(`NASA API Response Body: `, await res.clone().json());
-  return res.json();
-}
-
-export default async function Home() {
-  const apod = await getApod();
+export default function IssPage() {
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold">{apod.title}</h1>
-      <p className="text-sm text-gray-500">{apod.date}</p>
-      {apod.media_type === "image" ? ( <img src={apod.url} alt={apod.title} className="my-4 w-full rounded-lg" />) :
-                                                         (  <iframe src={apod.url} className="my-4 aspect-video w-full rounded-lg" allowFullScreen />  )}
-      <p className="leading-relaxed">{apod.explanation}</p>
+    <main className="flex-1 bg-slate-950 text-slate-100">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
+        <header>
+          <h1 className="text-3xl font-bold">ISS Live Tracker</h1>
+          <p className="mt-1 text-slate-400">
+            The International Space Station circles Earth about every 92 minutes. The shaded area is
+            night, the ring is where the station is above the horizon, the solid line is where it has been
+            over the last 45 minutes, and the dashed line is where it will go during the next orbit.
+          </p>
+        </header>
+        <IssTracker />
+        <SpaceWeatherPanel />
+      </div>
     </main>
-
   );
 }
